@@ -1,0 +1,3932 @@
+= 100 Days of Java
+:toc:
+
+A little of Java content every day for a hundred days.
+
+If you have any questions, ask me on my https://thegreatapi.com/social-media/[social media].
+
+== Day 1 - Generating a random number within a specific range.
+
+[source,java]
+----
+import java.security.SecureRandom;
+
+public final class Day001 {
+
+    public static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    public static void main(String[] args) {
+        System.out.println("Generating a number between 50 and 100...");
+        System.out.println(randomNumberBetween(50, 100));
+    }
+
+    private static int randomNumberBetween(int minimum, int maximum) {
+        return SECURE_RANDOM.nextInt(maximum - minimum) + minimum;
+    }
+
+}
+----
+
+== Day 2 - Formatting a `LocalDateTime` object.
+
+[source,java]
+----
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public final class Day002 {
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+    public static void main(String[] args) {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        String formattedDateTime = currentDateTime.format(FORMATTER);
+        System.out.println(formattedDateTime);
+    }
+
+}
+----
+
+== Day 3 - Scheduling a task to run every 2 seconds.
+
+[source,java]
+----
+import java.time.LocalTime;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class Day003 {
+
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+    public static void main(String[] args) throws InterruptedException {
+        var day003 = new Day003();
+        day003.printCurrentTimeEvery2Seconds();
+        Thread.sleep(15_000);
+        day003.stopPrinting();
+    }
+
+    public void printCurrentTimeEvery2Seconds() {
+        Runnable task = () -> System.out.println(LocalTime.now());
+        scheduledExecutorService.scheduleAtFixedRate(task, 0, 2, TimeUnit.SECONDS);
+    }
+
+    public void stopPrinting() {
+        scheduledExecutorService.shutdown();
+    }
+
+}
+----
+
+== Day 4 - Removing items from a List.
+
+[source,java]
+----
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public class Day004 {
+
+    public static void main(String[] args) {
+        List<Person> beatles = new ArrayList<>();
+        beatles.add(new Person("1", "John Lennon", LocalDate.of(1940, 10, 9)));
+        beatles.add(new Person("2", "Paul McCartney", LocalDate.of(1942, 6, 18)));
+        beatles.add(new Person("3", "George Harrison", LocalDate.of(1943, 2, 25)));
+        beatles.add(new Person("4", "Ringo Starr", LocalDate.of(1940, 7, 7)));
+
+        removeItemUsingEquals(beatles);
+
+        removeItemUsingAnSpecificFilter(beatles);
+
+        System.out.println(beatles);
+    }
+
+    private static void removeItemUsingAnSpecificFilter(List<Person> beatles) {
+        beatles.removeIf(person -> "George Harrison".equals(person.getName()));
+    }
+
+    private static void removeItemUsingEquals(List<Person> beatles) {
+        var lennon = new Person("1", "John Lennon", LocalDate.of(1940, 10, 9));
+        beatles.remove(lennon);
+    }
+
+    static class Person {
+
+        private final String id;
+
+        private final String name;
+
+        private final LocalDate dateOfBirth;
+
+        Person(String id, String name, LocalDate dateOfBirth) {
+            this.id = id;
+            this.name = name;
+            this.dateOfBirth = dateOfBirth;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public LocalDate getDateOfBirth() {
+            return dateOfBirth;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            var person = (Person) o;
+            return Objects.equals(id, person.id) && Objects.equals(name, person.name) && Objects.equals(dateOfBirth, person.dateOfBirth);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, name, dateOfBirth);
+        }
+
+        @Override
+        public String toString() {
+            return "Person{" +
+                    "name='" + name + '\'' +
+                    '}';
+        }
+    }
+
+}
+----
+
+== Day 5 - Creating a list with filtered items from other lists.
+
+[source,java]
+----
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class Day005 {
+
+    private static final String GUITAR = "Guitar";
+    private static final String DRUMS = "Drums";
+    private static final String BASS = "Bass";
+    private static final String VOCALS = "Vocals";
+    private static final String KEYBOARDS = "Keyboards";
+
+    public static void main(String[] args) {
+        List<BandMember> pinkFloyd = List.of(
+                new BandMember("David Gilmour", GUITAR),
+                new BandMember("Roger Waters", BASS),
+                new BandMember("Richard Wright", KEYBOARDS),
+                new BandMember("Nick Mason", DRUMS)
+        );
+
+        List<BandMember> ironMaiden = List.of(
+                new BandMember("Bruce Dickinson", VOCALS),
+                new BandMember("Steve Harris", BASS),
+                new BandMember("Adrian Smith", GUITAR),
+                new BandMember("Dave Murray", GUITAR),
+                new BandMember("Nicko McBrain", DRUMS)
+        );
+
+        List<BandMember> blackSabbath = List.of(
+                new BandMember("Ozzy Osbourne", VOCALS),
+                new BandMember("Geezer Butler", BASS),
+                new BandMember("Toni Iommi", GUITAR),
+                new BandMember("Bill Ward", DRUMS)
+        );
+
+        Stream<BandMember> musicians = Stream.concat(Stream.concat(pinkFloyd.stream(), ironMaiden.stream()), blackSabbath.stream());
+
+        List<String> guitarPlayers = musicians.filter(bandMember -> GUITAR.equals(bandMember.instrument))
+                                              .map(BandMember::name)
+                                              .collect(Collectors.toList());
+
+        System.out.println(guitarPlayers);
+    }
+
+    static record BandMember(String name, String instrument) {
+    }
+}
+
+----
+
+== Day 6 - Running a task asynchronously.
+
+[source,java]
+----
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+public class Day006 {
+
+    private static final Logger LOGGER = Logger.getLogger(Day006.class.getName());
+
+    public static void main(String[] args) {
+        CompletableFuture.runAsync(Day006::task);
+
+        LOGGER.info("Message from the main thread. Note that this message is logged before the async task ends.");
+
+        LOGGER.info("Waiting for the async task to end.");
+        boolean isQuiecent = ForkJoinPool.commonPool().awaitQuiescence(5, SECONDS);
+        if (isQuiecent) {
+            LOGGER.info("Async task ended.");
+        } else {
+            LOGGER.log(Level.SEVERE, "The async task is taking too long to finish. This program will end anyway.");
+        }
+    }
+
+    private static void task() {
+        LOGGER.info("Async task starting. This message is logged by the async task thread");
+        try {
+            Thread.sleep(1000);
+            LOGGER.info("Async task is ending. This message is logged by the async task thread");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.log(Level.SEVERE, "The async task thread was interrupted.", e);
+        }
+    }
+}
+----
+
+== Day 7 - Formatting a message using `MessageFormat`.
+
+[source,java]
+----
+import java.text.MessageFormat;
+
+public class Day007 {
+
+    public static void main(String[] args) {
+        showMessage("Java", "is", "great");
+    }
+
+    private static void showMessage(String param1, String param2, String param3) {
+        String message = MessageFormat.format("This message contains 3 parameters. The #1 is ''{0}'', the #2 is ''{1}'', and the #3 is ''{2}''.",
+                param1, param2, param3);
+        System.out.println(message);
+    }
+}
+----
+
+== Day 8 - Creating a thread pool to run tasks simultaneously and reuse threads.
+
+[source,java]
+----
+import java.security.SecureRandom;
+import java.text.MessageFormat;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
+
+public class Day008 {
+
+    private static final Logger LOGGER = Logger.getLogger(Day008.class.getName());
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    public static void main(String[] args) {
+        LOGGER.info("Creating a thread pool with 5 threads");
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+
+        /*
+         * Will submit 15 tasks. Note that there's only 5 threads to run all of them in our thread pool.
+         * So the first 5 tasks will run simultaneously and 10 tasks will wait in the queue until a thread is available.
+         */
+        LOGGER.info("Starting tasks submissions.");
+        try {
+            for (var i = 1; i <= 15; i++) {
+                int taskId = i;
+                LOGGER.info(() -> MessageFormat.format("Will submit task {0}.", taskId));
+                executor.submit(() -> task(taskId));
+            }
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    private static void task(int taskId) {
+        LOGGER.info(() -> MessageFormat.format("Running task {0}.", taskId));
+        simulateLongProcessing();
+        LOGGER.info(() -> MessageFormat.format("Task {0} has finished.", taskId));
+    }
+
+    private static void simulateLongProcessing() {
+        try {
+            Thread.sleep((RANDOM.nextInt(3) + 10) * 1000L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(MessageFormat.format("Thread {0} was interrupted.", Thread.currentThread().getName()), e);
+        }
+    }
+}
+----
+
+== Day 9 - Creating a valued Enum.
+
+[source,java]
+----
+public class Day009 {
+
+    public static void main(String[] args) {
+        for (Gender gender : Gender.values()) {
+            System.out.printf("The value of %s is %s%n", gender, gender.getValue());
+        }
+    }
+
+    public enum Gender {
+        FEMALE('f'),
+        MALE('m');
+
+        private final char value;
+
+        Gender(char value) {
+            this.value = value;
+        }
+
+        public char getValue() {
+            return value;
+        }
+    }
+}
+----
+
+== Day 10 - Using Google's Jimfs to write tests that use an in-memory file system.
+
+[source,java]
+----
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+class Day010Test {
+
+    @Test
+    void fileDoesNotExist() {
+        FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix());
+        Path directory = fileSystem.getPath("/directory");
+        Path file = directory.resolve(fileSystem.getPath("myfile.txt"));
+
+        assertThatCode(() -> Files.write(file, "thegreatapi.com".getBytes(), StandardOpenOption.WRITE))
+                .isInstanceOf(NoSuchFileException.class);
+    }
+
+    @Test
+    void fileExists() throws IOException {
+        FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix());
+        Path directory = fileSystem.getPath("/directory");
+        Path file = directory.resolve(fileSystem.getPath("myfile.txt"));
+
+        Files.createDirectory(directory);
+        Files.createFile(file);
+
+        assertThatCode(() -> Files.write(file, "thegreatapi.com".getBytes(), StandardOpenOption.WRITE))
+                .doesNotThrowAnyException();
+
+        assertThat(Files.readString(file))
+                .isEqualTo("thegreatapi.com");
+    }
+}
+----
+
+== Day 11 - Sorting a `java.util.Map` by its values.
+
+[source,java]
+----
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
+public class Day011 {
+
+    public static void main(String[] args) {
+        Map<String, Integer> unsortedMap = Map.of(
+                "three", 3,
+                "one", 1,
+                "four", 4,
+                "five", 5,
+                "two", 2
+        );
+
+        Map<String, Integer> sortedMap = sortByValue(unsortedMap);
+
+        System.out.println(sortedMap);
+    }
+
+    private static Map<String, Integer> sortByValue(Map<String, Integer> unsortedMap) {
+        Map<String, Integer> sortedMap = new LinkedHashMap<>();
+
+        unsortedMap.entrySet().stream()
+                   .sorted(Map.Entry.comparingByValue())
+                   .forEach(entry -> sortedMap.put(entry.getKey(), entry.getValue()));
+
+        return Collections.unmodifiableMap(sortedMap);
+    }
+}
+----
+
+== Day 12 - Using `Callable` and `Future` to run tasks in parallel.
+
+[source,java]
+----
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.logging.Logger;
+
+public class Day012 {
+
+    private static final Logger LOGGER = Logger.getLogger(Day012.class.getName());
+
+    public static void main(String[] args) throws InterruptedException {
+        var executorService = Executors.newSingleThreadExecutor();
+
+        try {
+            Callable<Integer> callable = Day012::doALongCalculation;
+            Future<Integer> future = executorService.submit(callable);
+
+            doOtherThingWhileCalculating();
+
+            LOGGER.info("Will get the calculated value. Note that the value will be get immediately");
+            LOGGER.info("Calculated value: " + future.get());
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
+    private static int doALongCalculation() throws InterruptedException {
+        Thread.sleep(5000L);
+        return 42;
+    }
+
+    private static void doOtherThingWhileCalculating() throws InterruptedException {
+        Thread.sleep(7000L);
+    }
+}
+----
+
+== Day 13 - Creating a lazily initialized Singleton.
+
+[source,java]
+----
+import java.time.LocalDateTime;
+
+public final class MySingletonClass {
+
+    private final LocalDateTime creationDateTime;
+
+    private MySingletonClass(LocalDateTime creationDateTime) {
+        this.creationDateTime = creationDateTime;
+    }
+
+    public LocalDateTime getCreationDateTime() {
+        return creationDateTime;
+    }
+
+    public static MySingletonClass getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
+
+    private static final class InstanceHolder {
+        static final MySingletonClass INSTANCE = new MySingletonClass(LocalDateTime.now());
+    }
+}
+
+----
+
+== Day 14 - Never pass a `double` as argument when constructing `BigDecimal` objects.
+
+[source,java]
+----
+import java.math.BigDecimal;
+
+public class Day014 {
+
+    public static void main(String[] args) {
+        // Prints 1.229999999999999982236431605997495353221893310546875
+        System.out.println(new BigDecimal(1.23));
+
+        // Prints 1.23
+        System.out.println(new BigDecimal("1.23"));
+
+        // Prints 1.23
+        System.out.println(BigDecimal.valueOf(1.23));
+    }
+}
+----
+
+== Day 15 - Builder Pattern
+
+[source,java]
+----
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+public class Day015 {
+
+    public static void main(String[] args) {
+        Person john = Person.builder()
+                            .name("John")
+                            .children(List.of(
+                                    Person.builder()
+                                          .name("Amanda")
+                                          .petName("Toto")
+                                          .build()
+                            ))
+                            .build();
+
+        System.out.println(john);
+    }
+
+    public static class Person {
+
+        private final String name;
+
+        private final List<Person> children;
+
+        @Nullable
+        private final String petName;
+
+        private Person(Builder builder) {
+            name = Objects.requireNonNull(builder.name);
+            children = builder.children != null ? builder.children : List.of();
+            petName = builder.petName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public List<Person> getChildren() {
+            return children;
+        }
+
+        @Nullable
+        public String getPetName() {
+            return petName;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        @Override
+        public String toString() {
+            return "Person{" +
+                    "name='" + name + '\'' +
+                    ", children=" + children +
+                    ", petName='" + petName + '\'' +
+                    '}';
+        }
+    }
+
+    public static final class Builder {
+
+        private String name;
+
+        private List<Person> children;
+
+        @Nullable
+        private String petName;
+
+        private Builder() {
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder children(List<Person> children) {
+            this.children = Collections.unmodifiableList(children);
+            return this;
+        }
+
+        public Builder petName(String petName) {
+            this.petName = petName;
+            return this;
+        }
+
+        public Person build() {
+            return new Person(this);
+        }
+    }
+}
+----
+
+== Day 16 - Joining Strings.
+
+[source,java]
+----
+public class Day016 {
+
+    public static void main(String[] args) {
+        System.out.println(createSql("id", "name", "coutry", "gender"));
+    }
+
+    private static String createSql(String... columns) {
+        return new StringBuilder("SELECT ")
+                .append(String.join(", ", columns))
+                .append(" FROM PEOPLE")
+                .toString();
+    }
+}
+----
+
+== Day 17 - Splitting Strings.
+
+[source,java]
+----
+import java.util.regex.Pattern;
+
+public class Day017 {
+
+    private static final Pattern REGEX = Pattern.compile(", ");
+
+    public static void main(String[] args) {
+        System.out.println("Simple split: ");
+        for (String column : simpleSplit()) {
+            System.out.println(column);
+        }
+
+        System.out.println("Performant split: ");
+        for (String column : performantSplit()) {
+            System.out.println(column);
+        }
+    }
+
+    private static String[] simpleSplit() {
+        return "id, name, country, gender".split(", ");
+    }
+
+    // If you will split frequently, prefer this implementation.
+    private static String[] performantSplit() {
+        return REGEX.split("id, name, country, gender");
+    }
+}
+----
+
+== Day 18 - Finding the maximum value from a `Collection`.
+
+[source,java]
+----
+import java.util.Collection;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+public class Day018 {
+
+    public static void main(String[] args) {
+        System.out.println(max(List.of(6, 3, 1, 8, 3, 9, 2, 7)));
+    }
+
+    private static Integer max(Collection<Integer> collection) {
+        return collection.stream()
+                         .max(Integer::compareTo)
+                         .orElseThrow(NoSuchElementException::new);
+    }
+}
+
+----
+
+== Day 19 - A `Map` implementation that keeps the elements in the same order that they were inserted.
+
+[source,java]
+----
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class Day019 {
+
+    public static void main(String[] args) {
+        Map<Integer, String> map = new LinkedHashMap<>();
+
+        map.put(5, "five");
+        map.put(4, "four");
+        map.put(3, "three");
+        map.put(2, "two");
+        map.put(1, "one");
+
+        map.forEach((key, value) -> System.out.println(key + ": " + value));
+    }
+}
+----
+
+== Day 20 - Reversing a `String`
+
+[source,java]
+----
+public class Day020 {
+
+    public static void main(String[] args) {
+        var original = "moc.ipataergeht";
+        var reversed = new StringBuilder(original).reverse().toString();
+        System.out.println(reversed);
+    }
+}
+----
+
+== Day 21 - Using WireMock to mock a web server.
+
+[source,java]
+----
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class Day021Test {
+
+    private WireMockServer server;
+
+    @BeforeEach
+    void setUp() {
+        server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
+        server.start();
+    }
+
+    @Test
+    void test() throws Exception {
+        mockWebServer();
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                                         .uri(URI.create("http://localhost:" + server.port() + "/my/resource"))
+                                         .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals("TheGreatAPI.com", response.body());
+    }
+
+    private void mockWebServer() {
+        server.stubFor(get("/my/resource")
+                .willReturn(ok()
+                        .withBody("TheGreatAPI.com")));
+    }
+
+    @AfterEach
+    void tearDown() {
+        server.shutdownServer();
+    }
+}
+----
+
+== Day 22 - Mapping and reducing from a `List`.
+
+[source,java]
+----
+import java.util.List;
+
+public class Day022 {
+
+    public static void main(String[] args) {
+        List<Order> orders = readOrders();
+
+        String bands = orders.stream()
+                             .map(Order::customer)
+                             .map(Customer::band)
+                             .reduce((band1, band2) -> String.join(";", band1, band2))
+                             .orElse("None");
+
+        System.out.println(bands);
+        /* Prints:
+        Pink Floyd;Black Sabbath;Ozzy Osbourne
+         */
+    }
+
+    private static List<Order> readOrders() {
+        var gilmour = new Customer("David Gilmour", "Pink Floyd");
+        var iommi = new Customer("Toni Iommi", "Black Sabbath");
+        var rhoads = new Customer("Randy Rhoads", "Ozzy Osbourne");
+
+        var strato = new Product("Fender", "Stratocaster");
+        var sg = new Product("Gibson", "SG");
+        var lesPaul = new Product("Gibson", "Les Paul");
+        var rr = new Product("Jackson", "RR");
+
+        return List.of(
+                new Order(gilmour, List.of(strato)),
+                new Order(iommi, List.of(sg)),
+                new Order(rhoads, List.of(lesPaul, rr))
+        );
+    }
+
+    static record Customer(String name, String band) {
+    }
+
+    static record Product(String brand, String modelName) {
+    }
+
+    static record Order(Customer customer, List<Product> products) {
+    }
+}
+----
+
+== Day 23 - Loading properties from a file.
+
+[source,java]
+----
+import java.io.IOException;
+import java.util.Properties;
+
+public class Day023 {
+
+    public static void main(String[] args) throws IOException {
+        var properties = new Properties();
+        try (var reader = Day023.class.getClassLoader().getResourceAsStream("config.properties")) {
+            properties.load(reader);
+        }
+        System.out.println(properties);
+    }
+}
+----
+
+== Day 24 - Running operating system commands.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day024;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+public class Day024 {
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        var process = new ProcessBuilder("ls").start();
+        try (var stdOutReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+             var stdErrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            if (process.waitFor(5, SECONDS)) {
+                int exitValue = process.exitValue();
+                if (exitValue == 0) {
+                    stdOutReader.lines().forEach(System.out::println);
+                } else {
+                    stdErrReader.lines().forEach(System.err::println);
+                }
+            } else {
+                throw new RuntimeException("Timeout");
+            }
+        }
+    }
+}
+----
+
+== Day 25 - Pattern Matching for `instanceof` in JDK 16.
+
+[source,java]
+----
+public class Day025 {
+
+    public static void main(String[] args) {
+        Number n = 6;
+
+        // Instead of doing:
+        if (n instanceof Integer) {
+            Integer i = (Integer) n;
+            print(i);
+        }
+
+        // Just do:
+        if (n instanceof Integer i) {
+            print(i);
+        }
+    }
+
+    private static void print(Integer i) {
+        System.out.println(i);
+    }
+}
+----
+
+== Day 26 - Using `Optional` when `null` is a valid return value.
+
+[source,java]
+----
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Optional;
+
+public class Day026 {
+
+    public static void main(String[] args) {
+        // Instead of doing:
+        String nullableValue = getNullableValue();
+        if (nullableValue != null) {
+            System.out.println(nullableValue.length());
+        } else {
+            System.out.println(0);
+        }
+
+        // Just do:
+        System.out.println(getOptionalValue().map(String::length).orElse(0));
+    }
+
+    @Nonnull
+    private static Optional<String> getOptionalValue() {
+        return Optional.empty();
+    }
+
+    @Nullable
+    private static String getNullableValue() {
+        return null;
+    }
+}
+----
+
+== Day 27 - Create a `String` from a `List`: one item per line.
+
+[source,java]
+----
+import java.util.List;
+
+import static java.util.stream.Collectors.joining;
+
+public class Day027 {
+
+    public static void main(String[] args) {
+        List<Player> players = createList();
+
+        String message = players.stream()
+                                .map(Player::toString)
+                                .collect(joining(System.lineSeparator()));
+
+        System.out.println(message);
+    }
+
+    private static List<Player> createList() {
+        var messi = new Player("Lionel Messi", "PSG", "Argentina", 42);
+        var cr7 = new Player("Cristiano Ronaldo", "Juventus", "Portugal", 50);
+        var lukaku = new Player("Romelu Lukaku", "Chelsea", "Belgium", 41);
+
+        return List.of(messi, cr7, lukaku);
+    }
+
+    private record Player(String name, String club, String coutry, int numberOfGoals) {
+    }
+}
+----
+
+== Day 28 - Sorting a `List` by a specific attribute.
+
+[source,java]
+----
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+public class Day028 {
+
+    public static void main(String[] args) {
+        Player messi = new Player("Lionel Messi", "Barcelona", "Argentina", 42);
+        Player cr7 = new Player("Cristiano Ronaldo", "Juventus", "Portugal", 50);
+        Player neymar = new Player("Neymar Jr.", "PSG", "Brazil", 41);
+
+        List<Player> players = Arrays.asList(messi, cr7, neymar);
+
+        players.sort(Comparator.comparing(Player::numberOfGoals).reversed());
+
+        System.out.println("Top Scorers:");
+        players.forEach(System.out::println);
+    }
+
+    private record Player(String name, String club, String coutry, int numberOfGoals) {
+    }
+}
+----
+
+== Day 29 - Using https://github.com/awaitility/awaitility[Awaitility] to wait for a task to finish.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day029;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.CompletableFuture;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class Day029Test {
+
+    @Test
+    void test() {
+        Day029 day029 = new Day029();
+
+        CompletableFuture.runAsync(day029::startComputingPrimes);
+
+        // Await until the already computed primes contain the key 100_000
+        await().until(() -> day029.getAlreadyComputedPrimes().containsKey(100_000));
+
+        assertEquals(1299709, day029.getAlreadyComputedPrimes().get(100_000));
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day029;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
+
+public class Day029 {
+
+    private final Map<Integer, Integer> primes = new ConcurrentHashMap<>();
+
+    public void startComputingPrimes() {
+        var count = 0;
+        for (var i = 2; i <= Integer.MAX_VALUE; i++) {
+            if (isPrime(i)) {
+                primes.put(++count, i);
+            }
+        }
+    }
+
+    private static boolean isPrime(int number) {
+        return IntStream.rangeClosed(2, (int) Math.sqrt(number))
+                        .allMatch(n -> number % n != 0);
+    }
+
+    public Map<Integer, Integer> getAlreadyComputedPrimes() {
+        return Collections.unmodifiableMap(primes);
+    }
+}
+----
+
+== Day 30 - Creating multi-line Strings.
+
+[source,java]
+----
+public class Day030 {
+
+    public static void main(String[] args) {
+
+        // Requires JDK 15 or JDK 13 with Preview Features enabled
+
+        var myString = """
+                This is a
+                text block of
+                multiple lines.
+                """;
+
+        System.out.println(myString);
+
+        var myIndentedString = """
+                And this is
+                a text block with
+                indentation:
+                    public String getMessage() {
+                         if (LocalTime.now().isAfter(LocalTime.of(12, 0))) {
+                             return "Good afternoon";
+                         } else {
+                             return "Good morning";
+                         }
+                     }
+                """;
+
+        System.out.println(myIndentedString);
+    }
+}
+----
+
+== Day 31 - Converting a `Stream` to `List` on JDK 16.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day031;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class Day031 {
+
+    public static void main(String[] args) {
+        // Instead of doing:
+        List<String> list = Stream.of("the", "great", "api", ".com")
+                                  .collect(Collectors.toList());
+
+        // Just do:
+        List<String> listJdk16 = Stream.of("the", "great", "api", ".com")
+                                       .toList();
+    }
+}
+----
+
+== Day 32 - Using switch to return a value.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day032;
+
+import java.security.SecureRandom;
+
+public class Day032 {
+
+    public static void main(String[] args) {
+        String result = map(randomNumber());
+        System.out.println(result);
+    }
+
+    private static String map(int number) {
+        // Requires JDK 12
+        return switch (number) {
+            case 1 -> "one";
+            case 2 -> "two";
+            case 3 -> "three";
+            default -> "unknown";
+        };
+    }
+
+    private static int randomNumber() {
+        return new SecureRandom().nextInt(4);
+    }
+}
+----
+
+== Day 33 - Start using `Optional#orElseThrow` instead of `Optional#get`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day033;
+
+import java.time.LocalTime;
+import java.util.Optional;
+
+public class Day033 {
+
+    public static void main(String[] args) {
+        Optional<LocalTime> optionalValue = getOptionalValue();
+
+        // Stop using Optional#get.
+        // It will be deprecated soon, as you can see in https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8160606
+        System.out.println(optionalValue.get());
+
+        // Start using Optional#orElseThrow instead of Optional#get
+        System.out.println(getOptionalValue().orElseThrow());
+    }
+
+    private static Optional<LocalTime> getOptionalValue() {
+        return Optional.of(LocalTime.now());
+    }
+}
+----
+
+== Day 34 - Printing information about all java processes running on the machine.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day034;
+
+import java.io.File;
+
+public class Day034 {
+
+    public static final String JAVA_SUFFIX = File.separator + "java";
+
+    public static void main(String[] args) {
+        ProcessHandle.allProcesses()
+                     .filter(Day034::isJavaProcess)
+                     .map(ProcessHandle::info)
+                     .forEach(System.out::println);
+    }
+
+    private static boolean isJavaProcess(ProcessHandle processHandle) {
+        return processHandle.info()
+                            .command()
+                            .map(command -> command.endsWith(JAVA_SUFFIX))
+                            .orElse(false);
+    }
+}
+----
+
+== Day 35 - Autoclosing resources (try-with-resources).
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day035;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Day035 {
+
+    public static void main(String[] args) throws IOException {
+        String path = args[0];
+
+        // Instead of doing:
+        var bufferedReader = new BufferedReader(new FileReader(path));
+        try {
+            String line = bufferedReader.readLine();
+            System.out.println(line);
+        } finally {
+            bufferedReader.close();
+        }
+
+        // Just do:
+        try (var autoClosedBufferedReader = new BufferedReader(new FileReader(path))) {
+            String line = autoClosedBufferedReader.readLine();
+            System.out.println(line);
+        }
+    }
+}
+----
+
+== Day 36 - Using `javax.annotation.Nonnull` (JSR 305) to avoid `NullPointerException`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day036;
+
+import javax.annotation.Nonnull;
+
+public final class Day036 {
+
+    private Day036() {
+    }
+
+    public static void main(String[] args) {
+        printLenght(null);
+    }
+
+    public static void printLenght(@Nonnull String s) {
+        System.out.println(s.length());
+    }
+}
+----
+
+== Day 37 - Using `Objects.requireNonNullElse` when `Optional` is not an option.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day037;
+
+import javax.annotation.Nullable;
+import java.util.Objects;
+
+public class Day037 {
+
+    public static void main(String[] args) {
+        String s = Objects.requireNonNullElse(doStuff(), "not found");
+
+        // Will print 'not found'
+        System.out.println(s);
+    }
+
+    @Nullable
+    private static String doStuff() {
+        return null;
+    }
+}
+----
+
+== Day 38 - Supplying a default value in case of timeout when running an async task.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day038;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+public class Day038 {
+
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        String webSite = CompletableFuture.supplyAsync(Day038::getWebSite)
+                                          .completeOnTimeout("https://twitter.com/helber_belmiro", 5, SECONDS)
+                                          .get();
+
+        System.out.println(webSite);
+    }
+
+    private static String getWebSite() {
+        try {
+            Thread.sleep(10_000);
+            return "thegreatapi.com";
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+    }
+}
+----
+
+== Day 39 - Understanding the Prefix (++i) and Postfix (i++) Operators
+
+I did a blog post for that: https://thegreatapi.com/blog/prefix-and-postfix-operators/
+
+== Day 40 - Filtering a Stream using `Predicate#not`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day040;
+
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import static java.util.function.Predicate.not;
+
+public class Day040 {
+
+    public static void main(String[] args) {
+        // Instead of doing:
+        printAllThat(word -> !word.isEmpty());
+
+        // Just do:
+        printAllThat(not(String::isEmpty));
+    }
+
+    private static void printAllThat(Predicate<String> filter) {
+        Stream.of("avocado", "chair", "", "dog", "car")
+              .filter(filter)
+              .forEach(System.out::println);
+    }
+}
+----
+
+== Day 41 - Quiz about `Collections#unmodifiableList`.
+
+Given the following:
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day041;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Day041 {
+
+    public static void main(String[] args) {
+        List<String> originalList = new ArrayList<>();
+        originalList.add("one");
+        originalList.add("two");
+        originalList.add("three");
+
+        List<String> copy = Collections.unmodifiableList(originalList);
+
+        originalList.remove("two");
+
+        System.out.println(String.join(" ", copy));
+    }
+}
+----
+
+What will be printed?
+
+a) one two tree
+
+b) one three
+
+c) Exception at `originalList.remove("two");`
+
+d) Exception at `String.join(" ", copy)`
+
+e) Compilation error
+
+https://thegreatapi.com/solutions-for-100-days-of-java/[Check the answer]
+
+== Day 42 - Using `jinfo` to update manageable VM flags at runtime.
+
+In this article, https://github.com/Vipin-Sharma[Vipin Sharma] explains how to use the utility `jinfo`, which is part of JDK.
+It's pretty useful when you need to set HeapDumpOnOutOfMemoryError to investigate a memory leak, for example.
+
+https://jfeatures.com/blog/jinfo
+
+== Day 43 - Indenting a String.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day043;
+
+public class Day043 {
+
+    public static void main(String[] args) {
+        var methodCode = """
+                private static void task() {
+                    LOGGER.info("Async task starting. This message is logged by the async task thread");
+                    try {
+                        Thread.sleep(1000);
+                        LOGGER.info("Async task is ending. This message is logged by the async task thread");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        LOGGER.log(Level.SEVERE, "The async task thread was interrupted.", e);
+                    }
+                }
+                """;
+
+        var classCode = """
+                public class MyClass {
+                %s
+                }
+                """;
+
+        // Requires JDK 12
+        String fullCode = classCode.formatted(methodCode.indent(4));
+
+        System.out.println(fullCode);
+    }
+}
+----
+
+== Day 44 - Formatting Strings with `java.lang.String#formatted`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day044;
+
+public class Day044 {
+
+    public static final String NAME = "Helber Belmiro";
+
+    public static void main(String[] args) {
+        String formattedString;
+
+        // Instead of doing:
+        formattedString = String.format("My name is %s", NAME);
+
+        // Just do: (Requires JDK 15)
+        formattedString = "My name is %s".formatted(NAME);
+
+        System.out.println(formattedString);
+    }
+}
+----
+
+== Day 45 - Using `java.util.Comparator#comparing` to sort a `List`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day045;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+public class Day045 {
+
+    public static void main(String[] args) {
+        List<Musician> queen = getMusicians();
+
+        // Instead of doing:
+        queen.sort(new Comparator<Musician>() {
+            @Override
+            public int compare(Musician m1, Musician m2) {
+                return m1.dateOfBirth.compareTo(m2.dateOfBirth);
+            }
+        });
+
+        System.out.println(queen);
+
+        // Just do:
+        queen.sort(Comparator.comparing(Musician::dateOfBirth));
+
+        System.out.println(queen);
+    }
+
+    private static List<Musician> getMusicians() {
+        Musician roger = new Musician("Roger Taylor", LocalDate.of(1949, 7, 26));
+        Musician john = new Musician("John Deacon", LocalDate.of(1951, 8, 19));
+        Musician brian = new Musician("Brian May", LocalDate.of(1947, 7, 19));
+        Musician freddie = new Musician("Freddie Mercury", LocalDate.of(1946, 9, 5));
+
+        return Arrays.asList(roger, john, brian, freddie);
+    }
+
+    record Musician(String name, LocalDate dateOfBirth) {
+    }
+}
+----
+
+== Day 46 - Using `Function` to map a List from one type to another.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day046;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Day046 {
+
+    public static void main(String[] args) {
+        List<Musician> queen = getMusicians();
+        List<Integer> years;
+
+        // Instead of doing:
+        years = new ArrayList<>();
+        for (Musician musician : queen) {
+            years.add(musician.dateOfBirth.getYear());
+        }
+
+        System.out.println(years);
+
+        // Just do:
+        years = queen.stream()
+                     .map(musician -> musician.dateOfBirth.getYear())
+                     .collect(Collectors.toList());
+
+        System.out.println(years);
+    }
+
+    private static List<Musician> getMusicians() {
+        Musician roger = new Musician("Roger Taylor", LocalDate.of(1949, 7, 26));
+        Musician john = new Musician("John Deacon", LocalDate.of(1951, 8, 19));
+        Musician brian = new Musician("Brian May", LocalDate.of(1947, 7, 19));
+        Musician freddie = new Musician("Freddie Mercury", LocalDate.of(1946, 9, 5));
+
+        return Arrays.asList(roger, john, brian, freddie);
+    }
+
+    record Musician(String name, LocalDate dateOfBirth) {
+    }
+}
+----
+
+== Day 47 - Creating a `FunctionalInterface`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day047;
+
+public class Day047 {
+
+    @FunctionalInterface
+    interface Converter {
+        // Because of the @FunctionalInterface annotation, only one method is allowed in this interface
+
+        String convert(Integer number);
+    }
+
+    public static void main(String[] args) {
+        for (var i = 1; i <= 4; i++) {
+            System.out.println(i + " in english: " + englishConverter().convert(i));
+            System.out.println(i + " in portuguese: " + portugueseConverter().convert(i));
+            System.out.println(i + " in german: " + germanConverter().convert(i));
+        }
+    }
+
+    private static Converter germanConverter() {
+        return number -> {
+            switch (number) {
+                case 1:
+                    return "eins";
+                case 2:
+                    return "zwei";
+                case 3:
+                    return "drei";
+                case 4:
+                    return "vier";
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private static Converter portugueseConverter() {
+        return number -> {
+            switch (number) {
+                case 1:
+                    return "um";
+                case 2:
+                    return "dois";
+                case 3:
+                    return "três";
+                case 4:
+                    return "quatro";
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private static Converter englishConverter() {
+        return number -> {
+            switch (number) {
+                case 1:
+                    return "one";
+                case 2:
+                    return "two";
+                case 3:
+                    return "three";
+                case 4:
+                    return "four";
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        };
+    }
+}
+----
+
+== Day 48 - Don't Repeat Yourself: Reusing functions with `Function#andThen`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day048;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
+public class Day048 {
+
+    public static void main(String[] args) {
+        System.out.println(lastAlbumWith("Slash").apply(getGunsNRosesAlbums()).title());
+
+        System.out.println(lastAlbumWith("Slash", "Izzy Stradlin").apply(getGunsNRosesAlbums()).title());
+
+        System.out.println(firstAlbumWith("Matt Sorum").apply(getGunsNRosesAlbums()).title());
+
+        /*
+        Output:
+        The Spaghetti Incident
+        Use Your Illusion II
+        Use Your Illusion I
+         */
+    }
+
+    private static Function<List<Album>, Album> firstAlbumWith(String... bandMembers) {
+        return albumsWith(bandMembers).andThen(sortByYear())
+                                      .andThen(firstAlbum());
+    }
+
+    private static Function<List<Album>, Album> lastAlbumWith(String... bandMembers) {
+        return albumsWith(bandMembers).andThen(sortByYear())
+                                      .andThen(lastAlbum());
+    }
+
+    private static Function<List<Album>, Album> lastAlbum() {
+        return albums -> albums.get(albums.size() - 1);
+    }
+
+    private static Function<List<Album>, Album> firstAlbum() {
+        return albums -> albums.get(0);
+    }
+
+    private static UnaryOperator<List<Album>> sortByYear() {
+        return albums -> albums.stream()
+                               .sorted(Comparator.comparing(Album::year))
+                               .toList();
+    }
+
+    private static Function<List<Album>, List<Album>> albumsWith(String... bandMembers) {
+        if (bandMembers.length < 1) {
+            throw new IllegalArgumentException("");
+        } else {
+            Function<List<Album>, List<Album>> resultFunction = albums -> albums;
+            for (String bandMember : bandMembers) {
+                resultFunction = resultFunction.andThen(albumsWith(bandMember));
+            }
+            return resultFunction;
+        }
+    }
+
+    private static UnaryOperator<List<Album>> albumsWith(String bandMember) {
+        return albums -> albums.stream()
+                               .filter(album -> album.lineup().contains(bandMember))
+                               .toList();
+    }
+
+    private static List<Album> getGunsNRosesAlbums() {
+        List<String> lineup87to90 = List.of("Axl Rose", "Slash", "Izzy Stradlin", "Duff McKagan", "Steven Adler");
+        List<String> lineup91 = List.of("Axl Rose", "Slash", "Izzy Stradlin", "Duff McKagan", "Matt Sorum", "Dizzy Reed");
+        List<String> lineup91to93 = List.of("Axl Rose", "Slash", "Gilby Clarke", "Duff McKagan", "Matt Sorum", "Dizzy Reed");
+        List<String> lineup2008 = List.of("Axl Rose", "Bumblefoot", "Richard Fortus", "Tommy Stinson", "Frank Ferrer", "Chris Pitman", "Dizzy Reed");
+
+        return List.of(
+                new Album("Appetite for Destruction", lineup87to90, 1987),
+                new Album("G N' R Lies", lineup87to90, 1988),
+                new Album("Use Your Illusion I", lineup91, 1991),
+                new Album("Use Your Illusion II", lineup91, 1991),
+                new Album("The Spaghetti Incident", lineup91to93, 1993),
+                new Album("Chinese Democracy", lineup2008, 2008)
+        );
+    }
+
+    private record Album(String title, List<String> lineup, int year) {
+    }
+}
+----
+
+== Day 49 - `Function#identity`: Creating a function that always returns its input argument.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day049;
+
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class Day049 {
+
+    public static void main(String[] args) {
+        Map<Integer, String> portugueseNumbers = translateToPortuguese(englishNumbers());
+        System.out.println(portugueseNumbers);
+    }
+
+    private static Map<Integer, String> translateToPortuguese(Map<Integer, String> numbers) {
+        /*
+        Instead of doing:
+        Function<Integer, Integer> keyMapper = number -> number;
+         */
+
+        // Just do:
+        Function<Integer, Integer> keyMapper = Function.identity();
+
+        Function<Integer, String> valueMapper = number -> switch (number) {
+            case 1 -> "um";
+            case 2 -> "dois";
+            case 3 -> "três";
+            case 4 -> "quatro";
+            default -> throw new UnsupportedOperationException("Cannot translate %d".formatted(number));
+        };
+
+        return numbers.keySet()
+                      .stream()
+                      .collect(Collectors.toMap(keyMapper, valueMapper));
+    }
+
+    private static Map<Integer, String> englishNumbers() {
+        return Map.of(
+                1, "one",
+                2, "two",
+                3, "three",
+                4, "four"
+        );
+    }
+}
+----
+
+== Day 50 - Creating a `Stream` from a range of Integers.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day050;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
+public class Day050 {
+
+    public static void main(String[] args) {
+        System.out.println(createPool(10));
+        System.out.println(enhancedCreatePool(10));
+    }
+
+    // Instead of:
+    private static List<PooledObject> createPool(int poolSize) {
+        List<PooledObject> pool = new ArrayList<>(poolSize);
+        for (var i = 0; i < poolSize; i++) {
+            pool.add(new PooledObject(String.valueOf(i)));
+        }
+        return pool;
+    }
+
+    // Just do:
+    private static List<PooledObject> enhancedCreatePool(int poolSize) {
+        return IntStream.range(0, poolSize)
+                        .mapToObj(i -> new PooledObject(String.valueOf(i)))
+                        .toList();
+    }
+
+    private record PooledObject(String id) {
+    }
+}
+----
+
+== Day 51 - Using `UnaryOperator`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day051;
+
+import java.util.function.UnaryOperator;
+
+public class Day051 {
+
+    public static void main(String[] args) {
+        // Instead of doing:
+        // Function<Integer, Integer> multiplyBy2 = i -> i * 2;
+
+        // Just do:
+        UnaryOperator<Integer> multiplyBy2 = i -> i * 2;
+
+        System.out.println(multiplyBy2.apply(3));
+    }
+}
+----
+
+== Day 52 - Making `IOException` unchecked.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day052;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Day052 {
+
+    public static void main(String[] args) {
+        System.out.println(readFile());
+    }
+
+    public static String readFile() {
+        try {
+            return Files.readString(Path.of("/test.txt"));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+}
+----
+
+== Day 53 - Using `Supplier` to run an expensive object creation only when and if needed
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day053;
+
+import java.util.logging.Logger;
+
+public class Day053 {
+
+    private static final Logger LOGGER = Logger.getLogger(Day053.class.getName());
+
+    public static void main(String[] args) {
+        // Instead of always running the expensive method
+        // LOGGER.info(veryExpensiveStringCreation());
+
+        // Pass the method reference so that it is called only when and if necessary
+        LOGGER.info(Day053::veryExpensiveStringCreation);
+    }
+
+    private static String veryExpensiveStringCreation() {
+        try {
+            Thread.sleep(10_000);
+        } catch (InterruptedException e) {
+            //TODO: handle properly
+        }
+        return "thegreatapi.com";
+    }
+}
+----
+
+== Day 54 - Computing `Map` values if absent.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day054;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class Day054 {
+
+    public static void main(String[] args) {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "one");
+        map.put(2, "two");
+
+//        Instead of doing:
+//        String three = map.get(3);
+//        if (three == null) {
+//            three = "three";
+//            map.put(3, three);
+//        }
+
+//        Just do:
+        String three = map.computeIfAbsent(3, k -> "three");
+
+        System.out.println(three);
+        System.out.println(map);
+    }
+}
+----
+
+== Day 55 - Creating smart and readable assertions with https://github.com/assertj/assertj-core[AssertJ]
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day055;
+
+public record Day055(String fieldA, Integer fieldB) {
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day055;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class Day055Test {
+
+    @Test
+    void testEquals() {
+        Day055 obj1 = new Day055("thegreatapi.com", 42);
+        Day055 obj2 = new Day055("thegreatapi.com", 42);
+
+        // Intead of using JUnit assertions, like this:
+        assertEquals(obj1.hashCode(), obj2.hashCode());
+
+        // Use AssertJ, like this:
+        assertThat(obj1).hasSameHashCodeAs(obj2);
+    }
+}
+----
+
+== Day 56 - Printing colored characters on the console
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day056;
+
+public final class Day056 {
+
+    private static final String RESET_COLOR = "\u001B[0m";
+
+    public static void main(String[] args) {
+        var color = Color.valueOf(args[0]);
+        System.out.println(color.getAnsiColor() + "thegreatapi.com" + RESET_COLOR);
+    }
+
+    @SuppressWarnings("unused")
+    enum Color {
+        BLACK("\u001B[30m"),
+        BLUE("\u001B[34m"),
+        RED("\u001B[31m"),
+        YELLOW("\u001B[33m"),
+        WHITE("\u001B[37m");
+
+        private final String ansiColor;
+
+        Color(String ansiColor) {
+            this.ansiColor = ansiColor;
+        }
+
+        public final String getAnsiColor() {
+            return ansiColor;
+        }
+    }
+}
+----
+
+== Day 57 - Using https://picocli.info/[Picocli] to parse command line arguments
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day057;
+
+import picocli.CommandLine;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.Callable;
+
+@CommandLine.Command(
+        mixinStandardHelpOptions = true,
+        description = "Prints the contents of the specified file in the specified color")
+public class Day057 implements Callable<Integer> {
+
+    private static final String RESET_COLOR = "\u001B[0m";
+
+    @CommandLine.Option(names = {"-c", "--collor"}, description = "BLACK, BLUE, RED, YELLOW or WHITE")
+    private Color color;
+
+    @CommandLine.Parameters(index = "0", description = "The file whose checksum to calculate.")
+    private Path path;
+
+    @Override
+    public Integer call() throws Exception {
+        print(Files.readString(path));
+        return 0;
+    }
+
+    private void print(String text) {
+        System.out.println(color.getAnsiColor() + text + RESET_COLOR);
+    }
+
+    public static void main(String... args) {
+        int exitCode = new CommandLine(new Day057()).execute(args);
+        System.exit(exitCode);
+    }
+
+    @SuppressWarnings("unused")
+    enum Color {
+        BLACK("\u001B[30m"),
+        BLUE("\u001B[34m"),
+        RED("\u001B[31m"),
+        YELLOW("\u001B[33m"),
+        WHITE("\u001B[37m");
+
+        private final String ansiColor;
+
+        Color(String ansiColor) {
+            this.ansiColor = ansiColor;
+        }
+
+        public final String getAnsiColor() {
+            return ansiColor;
+        }
+    }
+}
+----
+
+== Day 58 - Never write code that depends on `toString()` format
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day058;
+
+import java.util.List;
+
+public class Day058 {
+
+    static class Bad {
+
+        /**
+         * Never write code that depends on {@link Object#toString()} format.
+         * The format can change in the future and break your code.
+         * In this particular case, we don't even know the {@link List} implementation that we're receiving,
+         * and we don't have any guarantee that the return of {@link List#toString()} would be in the expected format.
+         */
+        public String convertToString(List<String> list) {
+            return list.toString().replace("[", "").replace("]", "");
+        }
+    }
+
+    static class Good {
+
+        public String convertToString(List<String> list) {
+            return String.join(", ", list);
+        }
+    }
+}
+----
+
+== Day 59 - Using a `Predicate`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day059;
+
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+public class Day059 {
+
+    public static void main(String[] args) {
+        /*
+         A Predicate<T> is the same as Function<T, Boolean>.
+         It consumes a T and returns a Boolean.
+         */
+        Predicate<Integer> isPair = intValue -> intValue % 2 == 0;
+
+        List<Integer> numbers = getNumbers();
+        numbers.stream()
+               .filter(isPair)
+               .forEach(System.out::println);
+    }
+
+    private static List<Integer> getNumbers() {
+        return IntStream.rangeClosed(1, 100).boxed().collect(Collectors.toList());
+    }
+}
+----
+
+== Day 60 - Chaining Predicates.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day060;
+
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static java.util.function.Predicate.not;
+
+public class Day060 {
+
+    public static void main(String[] args) {
+        Predicate<Integer> isEven = intValue -> intValue % 2 == 0;
+        Predicate<Integer> isPositive = intValue -> intValue > 0;
+
+        List<Integer> numbers = getNumbers();
+
+        // Prints negative odd numbers and positive even numbers.
+        numbers.stream()
+               .filter(isEven.and(isPositive).or(not(isEven).and(not(isPositive))))
+               .forEach(System.out::println);
+    }
+
+    private static List<Integer> getNumbers() {
+        return IntStream.rangeClosed(-20, 20).boxed().collect(Collectors.toList());
+    }
+}
+----
+
+== Day 61 - Using `var`: Good practices, advices and warnings from https://github.com/stuart-marks[Stuart Marks]
+
+https://openjdk.java.net/projects/amber/LVTIstyle.html
+
+== Day 62 - Converting JSON to Object and Object to JSON using Jakarta JSON Binding (JSON-B).
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day062;
+
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
+
+import java.util.List;
+
+public class Day062 {
+
+    public static void main(String[] args) throws Exception {
+        Musician steveHarris = new Musician("Steve Harris", "Bass", "England", "Iron Maiden");
+        Musician michaelSchenker = new Musician("Michael Schenker", "Guitar", "Germany", "UFO");
+        Musician daveLombardo = new Musician("Dave Lombardo", "Drums", "Cuba", "Slayer");
+
+        List<Musician> musicians = List.of(steveHarris, michaelSchenker, daveLombardo);
+
+        try (Jsonb jsonb = JsonbBuilder.create()) {
+            String json = jsonb.toJson(musicians);
+            System.out.println(json);
+
+            String jsonJohnLord = "{\"bandName\":\"Deep Purple\",\"country\":\"England\",\"instrument\":\"Keyboards\",\"name\":\"John Lord\"}";
+
+            Musician johnLord = jsonb.fromJson(jsonJohnLord, Musician.class);
+
+            System.out.println(johnLord);
+        }
+    }
+
+    public static class Musician {
+        private String name;
+        private String instrument;
+        private String country;
+        private String bandName;
+
+        public Musician() {
+        }
+
+        public Musician(String name, String instrument, String country, String bandName) {
+            this.name = name;
+            this.instrument = instrument;
+            this.country = country;
+            this.bandName = bandName;
+        }
+
+        // Getters and setters...
+
+        @Override
+        public String toString() {
+            return "Musician{" +
+                    "name='" + name + '\'' +
+                    ", instrument='" + instrument + '\'' +
+                    ", country='" + country + '\'' +
+                    ", bandName='" + bandName + '\'' +
+                    '}';
+        }
+    }
+}
+----
+
+== Day 63 - Using MicroProfile Fault Tolerance to create a fallback method.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava;
+
+import org.eclipse.microprofile.faulttolerance.Fallback;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.time.Instant;
+
+@Path("/hello")
+public class Day063 {
+
+    @GET
+    @Fallback(fallbackMethod = "fallbackHello")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        if (Instant.now().toEpochMilli() % 2 == 0) {
+            return "Hello from the main method";
+        } else {
+            throw new RuntimeException();
+        }
+    }
+
+    public String fallbackHello() {
+        return "Hello from the fallback method";
+    }
+}
+----
+
+== Day 64 - Partitioning a `Stream` by a `Predicate`
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day064;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+
+import static java.util.stream.Collectors.partitioningBy;
+
+public class Day064 {
+
+    public static void main(String[] args) {
+        Predicate<Band> isEuropeanBand = band -> List.of(Europe.values()).contains(band.country);
+
+        Map<Boolean, List<Band>> europeanBandsAndOthers = getBands().stream()
+                                                                    .collect(partitioningBy(isEuropeanBand));
+
+        List<Band> europeanBands = europeanBandsAndOthers.get(true);
+        List<Band> otherBands = europeanBandsAndOthers.get(false);
+
+        System.out.println("Bands from Europe: " + europeanBands);
+        System.out.println("Other bands: " + otherBands);
+    }
+
+    private static List<Band> getBands() {
+        return List.of(
+                new Band("Sepultura", America.BRAZIL),
+                new Band("Gojira", Europe.FRANCE),
+                new Band("Rush", America.CANADA),
+                new Band("AC/DC", Oceania.NEW_ZEALAND),
+                new Band("Iron Maiden", Europe.ENGLAND),
+                new Band("Scorpions", Europe.GERMANY),
+                new Band("Kiss", America.USA),
+                new Band("Mastodon", America.USA)
+        );
+    }
+
+    static record Band(String name, Country country) {
+    }
+
+    interface Country {
+    }
+
+    enum Europe implements Country {
+        ENGLAND,
+        GERMANY,
+        FRANCE
+    }
+
+    enum America implements Country {
+        BRAZIL,
+        ARGENTINA,
+        USA,
+        CANADA
+    }
+
+    enum Oceania implements Country {
+        AUSTRALIA,
+        NEW_ZEALAND
+    }
+}
+----
+
+== Day 65 - Reducing Verbosity of Generics With Diamond Operators
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day065;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Day065 {
+
+    public static void main(String[] args) {
+        // Instead of doing:
+        Map<Integer, List<Integer>> map1 = new HashMap<Integer, List<Integer>>();
+
+        // Just do:
+        Map<Integer, List<Integer>> map2 = new HashMap<>();
+    }
+}
+----
+
+== Day 66 - Replacing Lombok With Pure Java
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day066;
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.time.LocalDate;
+
+public class Day066 {
+
+    // Instead of doing:
+
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    class PersonLombok {
+        @Getter
+        private final String name;
+        @Getter
+        private final LocalDate dateOfBirth;
+        @Getter
+        private final String country;
+    }
+
+    // Just do: (requires JDK 16)
+
+    record PersonPureJava(String name, LocalDate dateOfBirth, String country) {
+    }
+}
+----
+
+== Day 67 - Use EnumMap When the Key of Your Map Is an Enum
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day067;
+
+import java.util.EnumMap;
+import java.util.Map;
+
+public class Day067 {
+
+    public static void main(String[] args) {
+        /*
+        Use EnumMap when the key of your Map is an enum.
+        EnumMap is more efficient than HashMap.
+         */
+        Map<Color, String> portugueseColors = new EnumMap<>(Color.class);
+        portugueseColors.put(Color.RED, "Vermelho");
+        portugueseColors.put(Color.YELLOW, "Amarelo");
+        portugueseColors.put(Color.BLUE, "Azul");
+    }
+
+    enum Color {
+        RED,
+        YELLOW,
+        BLUE
+    }
+}
+----
+
+== Day 68 - Using `StackWalker` from JDK 9 to find a `Class` on Stack Trace
+[source,java]
+----
+var interestingClasses = List.of(Integer.class, Number.class, String.class);
+
+// Instead of doing:
+List<String> interestingClassNames = interestingClasses.stream()
+                                                       .map(Class::getName)
+                                                       .toList();
+
+Optional<Class<?>> class1 = Arrays.stream(Thread.currentThread().getStackTrace())
+                                  .map(StackTraceElement::getClassName)
+                                  .filter(interestingClassNames::contains)
+                                  .findFirst()
+                                  .map(className -> {
+                                      try {
+                                          return Class.forName(className);
+                                      } catch (ClassNotFoundException e) {
+                                          throw new RuntimeException(e);
+                                      }
+                                  });
+
+// Just do:
+Optional<Class<?>> class2 = StackWalker.getInstance(RETAIN_CLASS_REFERENCE).walk(
+        stackFrameStream -> stackFrameStream.<Class<?>>map(StackWalker.StackFrame::getDeclaringClass)
+                                            .filter(interestingClasses::contains)
+                                            .findFirst()
+);
+----
+
+== Day 69 - Generating an infinite `Stream`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day069;
+
+import java.security.SecureRandom;
+import java.util.stream.Stream;
+
+public class Day069 {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    public static void main(String[] args) {
+        Stream.generate(() -> SECURE_RANDOM.nextInt(99) + 1)
+              .forEach(System.out::println);
+    }
+}
+----
+
+== Day 70 - Creating Parameterized Tests With JUnit.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day070;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.time.LocalDate;
+import java.util.stream.Stream;
+
+import static com.thegreatapi.ahundreddaysofjava.day070.Day070.Person;
+import static org.assertj.core.api.Assertions.assertThat;
+
+class Day070Test {
+
+    private static Stream<Arguments> isYearsHigherThanSource() {
+        Person peter = new Person("Peter", LocalDate.of(1950, 1, 1));
+        Person john = new Person("John", LocalDate.of(2015, 1, 1));
+        Person mary = new Person("Mary", LocalDate.of(2003, 1, 1));
+
+        return Stream.of(
+                Arguments.of(peter, 18, true),
+                Arguments.of(john, 18, false),
+                Arguments.of(mary, 18, true)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("isYearsHigherThanSource")
+    void isYearsHigherThan(Person person, int years, boolean expectedResult) {
+        assertThat(person.isYearsHigherThan(years))
+                .isEqualTo(expectedResult);
+    }
+}
+----
+
+== Day 71 - Using CDI in a standalone application with Weld.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day071;
+
+import org.jboss.weld.environment.se.Weld;
+import org.jboss.weld.environment.se.WeldContainer;
+
+public class Day071 {
+
+    public static void main(String[] args) {
+        Weld weld = new Weld();
+        WeldContainer container = weld.initialize();
+        Application application = container.select(Application.class).getHandler().get();
+
+        application.run();
+
+        container.shutdown();
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day071;
+
+import com.thegreatapi.ahundreddaysofjava.day071.animal.Calculator;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+class Application {
+
+    private final Calculator animal;
+
+    @Inject
+    private Application(Calculator animal) {
+        this.animal = animal;
+    }
+
+    public void run() {
+        System.out.println(animal.sum(2, 3));
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day071.animal;
+
+public interface Calculator {
+
+    int sum(int a, int b);
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day071.animal;
+
+class CalculatorImpl implements Calculator {
+
+    private CalculatorImpl() {
+    }
+
+    @Override
+    public int sum(int a, int b) {
+        return a + b;
+    }
+}
+----
+
+== Day 72 - Using the CDI annotation `@Named`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day072;
+
+import com.thegreatapi.ahundreddaysofjava.day072.animal.Animal;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
+@ApplicationScoped
+class Application {
+
+    private final Animal dog;
+    private final Animal cat;
+
+    @Inject
+    private Application(@Named("Dog") Animal dog, @Named("Cat") Animal cat) {
+        this.dog = dog;
+        this.cat = cat;
+    }
+
+    public void run() {
+        System.out.println("The dog says: " + dog.speak());
+        System.out.println("The cat says: " + cat.speak());
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day072.animal;
+
+import jakarta.inject.Named;
+
+@Named("Dog")
+class Dog implements Animal {
+
+    private Dog() {
+    }
+
+    @Override
+    public String speak() {
+        return "woof";
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day072.animal;
+
+import jakarta.inject.Named;
+
+@Named("Cat")
+class Cat implements Animal {
+
+    private Cat(){
+    }
+
+    @Override
+    public String speak() {
+        return "meow";
+    }
+}
+----
+
+== Day 73 - Using CDI Qualifiers.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day073;
+
+import com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor.Asynchronous;
+import com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor.Payment;
+import com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor.PaymentProcessor;
+import jakarta.inject.Inject;
+
+import java.math.BigDecimal;
+
+class Application {
+
+    private final PaymentProcessor paymentProcessor;
+
+    @Inject
+    private Application(@Asynchronous PaymentProcessor paymentProcessor) {
+        this.paymentProcessor = paymentProcessor;
+    }
+
+    public void run() {
+        paymentProcessor.process(new Payment("1234", BigDecimal.TEN));
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor;
+
+public interface PaymentProcessor {
+
+    void process(Payment payment);
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor;
+
+@Synchronous
+class SynchronousPaymentProcessor implements PaymentProcessor {
+
+    @Override
+    public void process(Payment payment) {
+        System.out.println("Processing payment " + payment + " synchronously");
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor;
+
+@Asynchronous
+class AsynchronousPaymentProcessor implements PaymentProcessor {
+
+    @Override
+    public void process(Payment payment) {
+        System.out.println("Processing payment " + payment + " asynchronously");
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor;
+
+import jakarta.inject.Qualifier;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+@Qualifier
+@Retention(RUNTIME)
+@Target({METHOD, FIELD, PARAMETER, TYPE})
+public @interface Asynchronous {
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day073.paymentprocessor;
+
+import jakarta.inject.Qualifier;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+@Qualifier
+@Retention(RUNTIME)
+@Target({METHOD, FIELD, PARAMETER, TYPE})
+public @interface Synchronous {
+}
+----
+
+== Day 74 - Using `java.util.function.Consumer`.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day074;
+
+import java.util.function.Consumer;
+
+public class Day074 {
+
+    public static void main(String[] args) {
+        Person daveMustaine = new Person("Dave Mustaine", "Megadeth");
+
+        // A consumer is a Function that uses an argument and returns nothing. Like Function<Person, Void>.
+        Consumer<Person> personConsumer = person -> System.out.printf(
+                "%s from %s sings: %s%n", daveMustaine.name, daveMustaine.bandName, "\"Holy waaaars\""
+        );
+
+        daveMustaine.sing(personConsumer);
+    }
+
+    private static record Person(String name, String bandName) {
+
+        void sing(Consumer<Person> consumer) {
+            consumer.accept(this);
+        }
+    }
+}
+----
+
+== Day 75 - Declaring specific Producers for CDI Beans.
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day075;
+
+import jakarta.inject.Inject;
+
+class Application {
+
+    private final PaymentProcessor paymentProcessor;
+
+    @Inject
+    private Application(PaymentProcessor paymentProcessor) {
+        this.paymentProcessor = paymentProcessor;
+    }
+
+    public void run() {
+        paymentProcessor.process(new Payment());
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day075;
+
+import jakarta.enterprise.inject.Produces;
+
+final class PaymentProcessorFactory {
+
+    private PaymentProcessorFactory() {
+    }
+
+    @Produces
+    static PaymentProcessor createPaymentProcessor() {
+        return new PaymentProcessorImpl(new DependencyA(), new DependencyB());
+    }
+}
+----
+
+== Day 76 - Creating a REST server with JAX-RS (and Quarkus as runtime)
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day076;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.time.LocalDate;
+import java.util.List;
+
+@Path("/person")
+public class Day076 {
+
+    // To start the server, run:
+    // mvn compile quarkus:dev
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Person> getPeople() {
+        return List.of(
+                new Person("1", "Ozzy Osbourne", LocalDate.of(1948, 12, 3)),
+                new Person("2", "Tony Iommi", LocalDate.of(1948, 2, 19)),
+                new Person("3", "Geezer Butler", LocalDate.of(1948, 7, 19)),
+                new Person("4", "Bill Ward", LocalDate.of(1948, 5, 5))
+        );
+    }
+
+    public static class Person {
+        private final String id;
+        private final String name;
+        private final LocalDate dateOfBirth;
+
+        public Person(String id, String name, LocalDate dateOfBirth) {
+            this.id = id;
+            this.name = name;
+            this.dateOfBirth = dateOfBirth;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public LocalDate getDateOfBirth() {
+            return dateOfBirth;
+        }
+    }
+}
+----
+
+== Day 77 - A YouTube channel with several presentations from Java Champions and Open Source Developers
+
+https://www.youtube.com/channel/UCEGhUuEWZjQEUMt4irjR8ow[International Developer Career Day YouTube Channel]
+
+== Day 78 - Creating a generic `Function`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day078;
+
+import java.util.List;
+import java.util.function.Function;
+
+public class Day078 {
+
+    public static void main(String[] args) {
+        int input1 = 42;
+        String output1 = map(input1, obj -> "The value is " + obj);
+        System.out.println(output1);
+
+        String[] input2 = {"a", "b", "c"};
+        List<String> output2 = map(input2, List::of);
+        System.out.println(output2);
+    }
+
+    private static <T, R> R map(T input, Function<T, R> function) {
+        return function.apply(input);
+    }
+}
+----
+
+== Day 79 - Using the Factory Pattern to Encapsulate Implementations
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day079;
+
+import com.thegreatapi.ahundreddaysofjava.day079.myservice.MyService;
+import com.thegreatapi.ahundreddaysofjava.day079.myservice.MyServiceFactory;
+
+public class Day079 {
+
+    public static void main(String[] args) {
+        // This class has access to MyService and MyServiceFactory, but not MyServiceImpl
+        MyService myService = MyServiceFactory.createMyService();
+        myService.run();
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day079.myservice;
+
+public interface MyService {
+
+    void run();
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day079.myservice;
+
+class MyServiceImpl implements MyService {
+
+    @Override
+    public void run() {
+        System.out.println("Running my service...");
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day079.myservice;
+
+public final class MyServiceFactory {
+
+    private MyServiceFactory() {
+    }
+
+    public static MyService createMyService() {
+        return new MyServiceImpl();
+    }
+}
+----
+
+== Day 80 - Using Sealed Classes from JDK 17
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day080;
+
+public class Day080 {
+
+    private sealed interface Animal permits Dog, Cat {
+        void speak();
+    }
+
+    private static non-sealed class Dog implements Animal {
+
+        @Override
+        public void speak() {
+            System.out.println("Woof");
+        }
+    }
+
+    private static final class Cat implements Animal {
+
+        @Override
+        public void speak() {
+            System.out.println("Meow");
+        }
+    }
+
+    private static class Bird implements Animal { // Error: Bird is not allowed in the sealed hierarchy
+
+        @Override
+        public void speak() {
+            System.out.println("Pew");
+        }
+    }
+}
+----
+
+== Day 81 - Finding the frequency of an element in a `List`
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day081;
+
+import java.util.Collections;
+import java.util.List;
+
+public class Day081 {
+
+    public static void main(String[] args) {
+        List<Integer> list = List.of(6, 3, 1, 2, 4, 2, 5, 8, 4, 5, 3);
+        int frequency = Collections.frequency(list, 4);
+        System.out.println(frequency);
+    }
+}
+----
+
+== Day 82 - Always cast Math operands before assignment
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day082;
+
+public class Day082 {
+
+    public static void main(String[] args) {
+        int a = 2;
+        int b = Integer.MAX_VALUE;
+
+        long uncastedLong = a * b;
+        System.out.println(uncastedLong); // Prints: -2
+
+        long castedLong = (long) a * b;
+        System.out.println(castedLong); // Prints: 4294967294
+    }
+}
+----
+
+== Day 83 - Using MicroProfile Fault Tolerance to set timeouts on endpoints.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day083;
+
+import org.eclipse.microprofile.faulttolerance.Timeout;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.time.temporal.ChronoUnit;
+
+@Path("/hello")
+public class Day083 {
+
+    @GET
+    @Timeout(value = 1, unit = ChronoUnit.SECONDS)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() throws InterruptedException {
+        Thread.sleep(1500);
+        return "";
+    }
+}
+----
+
+== Day 84 - Using MicroProfile Fault Tolerance to set Retries on endpoints.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day084;
+
+import org.eclipse.microprofile.faulttolerance.Retry;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.time.temporal.ChronoUnit;
+
+@Path("/hello")
+public class Day084 {
+
+    private static int numberOfAttempts = 0;
+
+    @GET
+    @Retry(maxRetries = 3, delay = 2, delayUnit = ChronoUnit.SECONDS)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        numberOfAttempts++;
+
+        if (numberOfAttempts < 3) {
+            throw new RuntimeException("Emulates an error");
+        } else {
+            return "Hello after " + numberOfAttempts + " attempts";
+        }
+    }
+}
+----
+
+== Day 85 - Using MicroProfile Fault Tolerance to set Retries on endpoints for specific Exceptions.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day085;
+
+import org.eclipse.microprofile.faulttolerance.Retry;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.security.SecureRandom;
+import java.time.temporal.ChronoUnit;
+
+@Path("/hello")
+public class Day085 {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private static int numberOfAttempts;
+
+    @GET
+    @Retry(retryOn = MyCustomException.class, maxRetries = 3, delay = 2, delayUnit = ChronoUnit.SECONDS)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        numberOfAttempts++;
+
+        if (numberOfAttempts < 3) {
+            if (RANDOM.nextBoolean()) {
+                // Will throw MyCustomException and will retry
+                throw new MyCustomException();
+            } else {
+                // Will throw RuntimeException and won't retry
+                throw new RuntimeException();
+            }
+        } else {
+            return "Hello after " + numberOfAttempts + " attempts";
+        }
+    }
+
+    static class MyCustomException extends RuntimeException {
+        private static final long serialVersionUID = 6631584573985699096L;
+    }
+}
+----
+
+== Day 86 - Using the Delegation Pattern to write decoupled and testable code.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day086;
+
+public class Day086 {
+
+    public static void main(String[] args) {
+        var toUpperStrategy = new ToUpperStrategy(IdentityStrategy.getInstance());
+        var addPrefixStrategy = new AddPrefixStrategy(toUpperStrategy);
+        var trimStrategy = new TrimStrategy(addPrefixStrategy);
+
+        String result = trimStrategy.apply("  thegreatapi.com    ");
+        System.out.println(result);
+    }
+
+    @FunctionalInterface
+    interface Strategy {
+        String apply(String s);
+    }
+
+    abstract static class AbstractStrategy implements Strategy {
+        private final Strategy delegate;
+
+        protected AbstractStrategy(Strategy delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public String apply(String s) {
+            return delegate.apply(doApply(s));
+        }
+
+        protected abstract String doApply(String s);
+    }
+
+    static class ToUpperStrategy extends AbstractStrategy {
+
+        ToUpperStrategy(Strategy delegate) {
+            super(delegate);
+        }
+
+        @Override
+        protected String doApply(String s) {
+            return s.toUpperCase();
+        }
+    }
+
+    static class TrimStrategy extends AbstractStrategy {
+
+        protected TrimStrategy(Strategy delegate) {
+            super(delegate);
+        }
+
+        @Override
+        protected String doApply(String s) {
+            return s.trim();
+        }
+    }
+
+    static class AddPrefixStrategy extends AbstractStrategy {
+
+        protected AddPrefixStrategy(Strategy delegate) {
+            super(delegate);
+        }
+
+        @Override
+        protected String doApply(String s) {
+            return "~> " + s;
+        }
+    }
+
+    static class IdentityStrategy implements Strategy {
+
+        private static final IdentityStrategy INSTANCE = new IdentityStrategy();
+
+        private IdentityStrategy() {
+        }
+
+        static IdentityStrategy getInstance() {
+            return INSTANCE;
+        }
+
+        @Override
+        public String apply(String s) {
+            return s;
+        }
+    }
+}
+----
+
+== Day 87 - Verifying if a class is annotated by a particular annotation.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day087;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+public class Day087 {
+
+    public static void main(String[] args) {
+        var myAnnotatedObject = new AnnotatedClass();
+        var myNonAnnotatedObject = new NonAnnotatedClass();
+
+        System.out.println(isAnnotated(myAnnotatedObject));   // Prints: true
+        System.out.println(isAnnotated(myNonAnnotatedObject)); // Prints: false
+    }
+
+    private static boolean isAnnotated(Object object) {
+        return object.getClass().isAnnotationPresent(MyAnnotation.class);
+    }
+
+    @MyAnnotation
+    static class AnnotatedClass {
+    }
+
+    static class NonAnnotatedClass {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    @interface MyAnnotation {
+    }
+}
+----
+
+== Day 88 - Verifying if a field is annotated by a particular annotation.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day088;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+public class Day088 {
+
+    public static void main(String[] args) throws NoSuchFieldException {
+        var myObject = new MyClass(2021, 8);
+
+        System.out.println(isAnnotated(myObject, "year"));   // Prints: true
+        System.out.println(isAnnotated(myObject, "month"));   // Prints: true
+    }
+
+    private static boolean isAnnotated(Object object, String fieldName) throws NoSuchFieldException {
+        return object.getClass().getDeclaredField(fieldName).isAnnotationPresent(MyAnnotation.class);
+    }
+
+    static class MyClass {
+
+        @MyAnnotation
+        private final int year;
+
+        private final int month;
+
+        MyClass(int year, int month) {
+            this.year = year;
+            this.month = month;
+        }
+
+        public int getYear() {
+            return year;
+        }
+
+        public int getMonth() {
+            return month;
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    @interface MyAnnotation {
+    }
+}
+----
+
+== Day 89 - Writing a Bean Validator.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day089;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+class Application {
+
+    private final BeanValidator beanValidator;
+
+    @Inject
+    Application(BeanValidator beanValidator) {
+        this.beanValidator = beanValidator;
+    }
+
+    public void run() {
+        var p = new Person("Freddie", 58);
+        beanValidator.validate(p);
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day089;
+
+class Person {
+
+    private final String name;
+
+    private final int age;
+
+    Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Maximum(17)
+    public int getAge() {
+        return age;
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day089;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Maximum {
+    int value();
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day089;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import java.util.Arrays;
+
+@ApplicationScoped
+class BeanValidator {
+
+    private final MethodValidator methodValidator;
+
+    @Inject
+    BeanValidator(MethodValidator methodValidator) {
+        this.methodValidator = methodValidator;
+    }
+
+    void validate(Object o) {
+        Arrays.stream(o.getClass().getDeclaredMethods())
+              .filter(method -> method.isAnnotationPresent(Maximum.class))
+              .forEach(method -> methodValidator.validate(method, o));
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day089;
+
+import jakarta.enterprise.context.ApplicationScoped;
+
+import java.lang.reflect.Method;
+
+@ApplicationScoped
+class MethodValidator {
+
+    void validate(Method method, Object object) {
+        Object value;
+        try {
+            value = method.invoke(object);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+
+        int maximum = method.getAnnotation(Maximum.class).value();
+
+        if (value instanceof Integer number && number > maximum) {
+            throw new RuntimeException("Invalid object. Method " + method.getName() +
+                    " can't return a value greater than " + maximum);
+        }
+    }
+}
+----
+
+== Day 90 - Using `StringJoiner`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day090;
+
+import java.util.StringJoiner;
+
+public class Day090 {
+
+    public static void main(String[] args) {
+        var stringJoiner = new StringJoiner(";");
+
+        stringJoiner.add("this");
+        stringJoiner.add("is");
+        stringJoiner.add("a");
+        stringJoiner.add("StringJoiner");
+
+        stringJoiner.add("and")
+                    .add("it")
+                    .add("has")
+                    .add("a")
+                    .add("fluent")
+                    .add("api");
+
+        // Prints: this;is;a;StringJoiner;and;it;has;a;fluent;api
+        System.out.println(stringJoiner);
+    }
+}
+----
+
+== Day 91 - Removing duplicate elements from a `List`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day091;
+
+import java.util.List;
+
+public class Day091 {
+
+    public static void main(String[] args) {
+        List<Integer> originalList = List.of(3, 1, 5, 2, 4, 1, 5, 3, 5, 2, 6);
+        List<Integer> distinctElementsList = originalList.stream().distinct().toList();
+
+        System.out.println(distinctElementsList);
+    }
+}
+----
+
+== Day 92 - Summing the elements of a `List`.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day092;
+
+import java.util.List;
+
+public class Day092 {
+
+    public static void main(String[] args) {
+        List<Integer> integers = List.of(1, 2, 3, 4, 5);
+
+        Integer sum = integers.stream().mapToInt(Integer::intValue).sum();
+
+        System.out.println(sum);
+    }
+}
+----
+
+== Day 93 - Never return `null` in a method that has a `Collection` as return type.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day093;
+
+import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.util.List;
+
+public class Day093 {
+
+    public static void main(String[] args) {
+        List<String> myList = getList();
+
+//      If myList is null, a NullPointerException will be thrown
+        for (String s : myList) {
+            System.out.println(s);
+        }
+    }
+
+    private static List<String> getList() {
+        if (someCondition()) {
+            return List.of("a", "b", "c");
+        } else {
+//          Instead of returning null
+//          return null;
+
+//          Return an empty list, so the caller don't need to check if the returned list is not null
+            return List.of();
+        }
+    }
+
+    private static boolean someCondition() {
+        return Instant.now().get(ChronoField.MILLI_OF_SECOND) % 2 == 0;
+    }
+}
+----
+
+== Day 94 - Using Reactive Streams from Java 9
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day094;
+
+import java.util.List;
+import java.util.concurrent.Flow;
+import java.util.concurrent.SubmissionPublisher;
+
+public class Day094 {
+
+    public static void main(String[] args) {
+        List<String> judasPriestMembers = List.of(
+                "Rob Halford",
+                "K.K. Downing",
+                "Glenn Tipton",
+                "Ian Hill",
+                "Scott Travis"
+        );
+
+        var subscriber = new MySubscriber();
+
+        try (var publisher = new SubmissionPublisher<String>()) {
+            publisher.subscribe(subscriber);
+            judasPriestMembers.forEach(publisher::submit);
+        }
+    }
+
+    static class MySubscriber implements Flow.Subscriber<String> {
+
+        private Flow.Subscription subscription;
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            System.out.println("Started subscription");
+            this.subscription = subscription;
+            subscription.request(1);
+        }
+
+        @Override
+        public void onNext(String item) {
+            System.out.println(item);
+            subscription.request(1);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            System.err.println("Error: " + throwable);
+        }
+
+        @Override
+        public void onComplete() {
+            System.out.println("Subscription complete");
+        }
+    }
+}
+----
+
+== Day 95 - Using Java-faker to create fake data for testing.
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day095;
+
+import com.github.javafaker.Faker;
+
+import java.util.Date;
+import java.util.List;
+import java.util.stream.IntStream;
+
+public class Day095 {
+
+    private static final Faker FAKER = new Faker();
+
+    public static void main(String[] args) {
+        List<Person> people = IntStream.rangeClosed(1, 10)
+                                       .mapToObj(i -> createPerson())
+                                       .toList();
+
+        people.forEach(System.out::println);
+
+//        Person[firstName=Randall, lastName=Oberbrunner, dateOfBirth=Tue Oct 02 06:16:54 BRT 1962]
+//        Person[firstName=Thanh, lastName=Lemke, dateOfBirth=Fri Feb 28 10:54:57 BRST 1964]
+//        Person[firstName=Walker, lastName=Waters, dateOfBirth=Fri Feb 21 16:55:01 BRT 1992]
+//        Person[firstName=Colin, lastName=Koelpin, dateOfBirth=Wed Jul 28 15:03:17 BRT 1982]
+//        Person[firstName=Velia, lastName=Corwin, dateOfBirth=Thu Nov 07 06:41:49 BRT 1974]
+//        Person[firstName=Dwayne, lastName=Wilkinson, dateOfBirth=Mon Apr 24 16:38:56 BRT 1972]
+//        Person[firstName=Lynn, lastName=Oberbrunner, dateOfBirth=Tue Mar 11 09:29:37 BRT 2003]
+//        Person[firstName=Cristie, lastName=Yundt, dateOfBirth=Thu Sep 04 05:28:06 BRT 1980]
+//        Person[firstName=Brynn, lastName=Tremblay, dateOfBirth=Thu Nov 03 10:28:57 BRST 1988]
+//        Person[firstName=Ahmad, lastName=Homenick, dateOfBirth=Tue Apr 19 15:46:28 BRT 1977]
+    }
+
+    private static Person createPerson() {
+        return new Person(
+                FAKER.name().firstName(),
+                FAKER.name().lastName(),
+                FAKER.date().birthday()
+        );
+    }
+
+    static record Person(String firstName, String lastName, Date dateOfBirth) {
+    }
+}
+----
+
+== Day 96 - Firing and Observing CDI Events
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day096;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+class OrderService {
+
+    @Inject
+    @BeforeOrderCompletes
+    private Event<Order> beforeOrderCompleteEvent;
+
+    @Inject
+    @AfterOrderCompletes
+    private Event<Order> afterOrderCompleteEvent;
+
+    public void complete(Order order) {
+        beforeOrderCompleteEvent.fire(order);
+        doComplete(order);
+        afterOrderCompleteEvent.fire(order);
+    }
+
+    private static void doComplete(Order order) {
+        System.out.printf("Completing order %s.%n", order);
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day096;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+@ApplicationScoped
+public class BeforeOrderCompletesObserver {
+
+    public void observeBeforeOrderCompletesMessage(@Observes @BeforeOrderCompletes Order order){
+        System.out.printf("Order %s will complete.%n", order);
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day096;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+@ApplicationScoped
+public class AfterOrderCompletesObserver {
+
+    public void observeAfterOrderCompletesMessage(@Observes @AfterOrderCompletes Order order){
+        System.out.printf("Order %s was completed.%n", order);
+    }
+}
+----
+
+== Day 97 - Using the Money and Currency API (JSR 354)
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day097;
+
+import org.javamoney.moneta.Money;
+
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+
+public class Day097 {
+
+    public static void main(String[] args) {
+        CurrencyUnit usd = Monetary.getCurrency("USD");
+
+        var oneDollar = Money.of(1, usd);
+        var fiftyCent = Money.of(0.5, usd);
+
+        // Prints: USD 1.5
+        System.out.println(oneDollar.add(fiftyCent));
+    }
+}
+----
+
+== Day 98 - Using CDI Interceptors to create validator annotations
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day098;
+
+import jakarta.inject.Inject;
+
+public class Application {
+
+    private final MyService myService;
+
+    @Inject
+    public Application(MyService myService) {
+        this.myService = myService;
+    }
+
+    public void run() {
+        // Will throw: Exception in thread "main" java.lang.RuntimeException: The email helber @ not valid email is not valid.
+        System.out.println(myService.hello("helber @ not valid email"));
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day098;
+
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+@Validate
+public class MyService {
+
+    public String hello(@Email String email) {
+        return "Hello " + email;
+    }
+}
+----
+
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day098;
+
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InvocationContext;
+
+@Interceptor
+@Validate
+@Priority(1)
+public class ValidationInterceptor {
+
+    private final EmailValidator emailValidator;
+
+    @Inject
+    public ValidationInterceptor(EmailValidator emailValidator) {
+        this.emailValidator = emailValidator;
+    }
+
+    @AroundInvoke
+    public Object intercept(InvocationContext invocationContext) throws Exception {
+        for (var i = 0; i < invocationContext.getParameters().length; i++) {
+            if (invocationContext.getMethod().getParameters()[i].isAnnotationPresent(Email.class)
+                    && invocationContext.getParameters()[i] instanceof String email) {
+                emailValidator.validate(email);
+            }
+        }
+
+        return invocationContext.proceed();
+    }
+}
+----
+
+== Day 99 - In Java, EVERY parameter is passed by value (copy)
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day099;
+
+public class Day099 {
+
+    public static void main(String[] args) {
+        /*
+        In Java, primitive variables (those of types int, byte, short, long, float, double, boolean, or char)
+        store values, and object variables (all the others, like String, Integer, Person, MyCustomClass...)
+        store pointers to the memory address where the object is stored.
+         */
+
+        // The variable 'i' stores the value 42
+        int i = 42;
+
+        // The variable 'ronnieJamesDio' stores the memory address whre the object 'new Person("Ronnie James Dio")'
+        // is stored. It's a pointer
+        Person ronnieJamesDio = new Person("Ronnie James Dio");
+
+        doStuff(i); // Pass a copy of 'i' to 'doStuff'
+        System.out.println(i); // Prints: 42
+
+        doStuff(ronnieJamesDio); // Pass a copy of the memory address stored by 'ronnieJamesDio' to 'doStuff'
+        System.out.println(ronnieJamesDio); // Prints: Person{name='Ronnie James Dio'}
+
+        doStuffWithTheObject(ronnieJamesDio); // Pass a copy of the memory address stored by 'ronnieJamesDio' to 'doStuffWithTheObject'
+        System.out.println(ronnieJamesDio); // Prints: Person{name='Cozy Powell'}
+    }
+
+    private static void doStuff(int n) {
+        // 'n' is a copy of 'i'
+
+        // This changes the value stored by 'n'
+        n = 100;
+    }
+
+    private static void doStuff(Person p) {
+        // p stores a copy of the memory address stored by the variable 'ronnieJamesDio' (a pointer).
+
+        // when we assign a new object, actually we're assigning the memory address where this new object is stored.
+        // We're assigning a new pointer.
+        p = new Person("Cozy Powell");
+    }
+
+    private static void doStuffWithTheObject(Person p) {
+        // p stores a copy of the memory address stored by the variable 'ronnieJamesDio' (a pointer).
+
+        // We're modifying the attribute of the object stored in the memory address to where the variable p points
+        p.name = "Cozy Powell";
+    }
+
+    private static class Person {
+        private String name;
+
+        Person(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return "Person{" +
+                    "name='" + name + '\'' +
+                    '}';
+        }
+    }
+}
+----
+
+== Day 100 - Benchmark: Optional vs Nullable
+[source,java]
+----
+package com.thegreatapi.ahundreddaysofjava.day100;
+
+import org.openjdk.jmh.annotations.Benchmark;
+
+public class Day100 {
+
+    @Benchmark
+    public void benchmarkNullable(ExecutionPlan plan) {
+        for (var i = 0; i < ExecutionPlan.ITERACTIONS; i++) {
+            String value = plan.getMyService().getNullable(i);
+            if (value != null) {
+                System.out.println(i + ": " + value);
+            }
+        }
+    }
+
+    @Benchmark
+    public void benchmarkOptional(ExecutionPlan plan) {
+        for (var i = 0; i < ExecutionPlan.ITERACTIONS; i++) {
+            var finalI = i;
+            plan.getMyService().getWithOptional(i).ifPresent(value -> System.out.println(finalI + ": " + value));
+        }
+    }
+}
+----
+
+[source]
+----
+Benchmark                  Mode  Cnt   Score   Error  Units
+Day100.benchmarkNullable  thrpt   25  44.593 ± 1.567  ops/s
+Day100.benchmarkOptional  thrpt   25  44.272 ± 1.001  ops/s
+----
